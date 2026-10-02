@@ -1,0 +1,4 @@
+qrcode[pil]>=7.4
+Pillow>=10.0
+segno>=1.5
+qrcode-artistic>=1.0   
