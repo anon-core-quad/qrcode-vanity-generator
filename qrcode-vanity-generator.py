@@ -28,28 +28,29 @@ from qrcode.image.styles.colormasks import RadialGradiantColorMask, SolidFillCol
 
 parser = argparse.ArgumentParser(description="QR Code vanity generator")
 parser.add_argument("-o", "--output", default="result.png", help="Output QR code file")
+parser.add_argument("-bc", "--backColor", type=int, default=254, help="Output QR code file")
+parser.add_argument("-c", "--frontColor", type=int, default=3, help="Output QR code file")
 parser.add_argument("-fg", "--foreground", help="Specify image used inside the QR points")
-parser.add_argument("-cfg", "--centered_foreground", action='store_true', help="Specify image used at center of the QR points")
+parser.add_argument("-cfg", "--centeredForeground", action='store_true', help="Specify image used at center of the QR points")
 parser.add_argument("-bg", "--background", help="Specify image used in the background, instead of white")
 parser.add_argument("-b", "--brightness", type=int, default=0.8, help="Default 0.8. Use it for estetic reason or if the QR code doesn't work. Tipically the modules of QR code must have a difference of about 40 percent of brightness with the background")
 parser.add_argument("-d", "--data", required=True, help="String encoded inside the QR code generated")
 args = parser.parse_args()
 
 
-if args.centered_foreground and not args.foreground:
-    parser.error('--foreground is required when --centered_foreground is given')
+if args.centeredForeground and not args.foreground:
+    parser.error('--foreground is required when --centeredForeground is given')
 
 resultImage = args.output
 foregroundImage = args.foreground
 backgroundImage = args.background
 dataQRCode = args.data
-
+backColor = args.backColor
+frontColor = args.frontColor
+bgBrightnessAdjustment = args.brightness
+centeredLogo = args.centeredForeground
 
 outputPath = "./outputs/"
-backColor = 1
-bgBrightnessAdjustment = args.brightness
-centeredLogo = args.centered_foreground
-
 
 # Generate QR code with high error correction
 qr = qrcode.QRCode(
@@ -75,7 +76,7 @@ if foregroundImage is None:
         #     edge_color=(0, 0, 0),
         # ),
         color_mask=SolidFillColorMask(
-            front_color=(254, 254, 254),
+            front_color=(frontColor, frontColor, frontColor),
             back_color=(backColor, backColor, backColor),
         )
     )
@@ -86,7 +87,7 @@ else:
             module_drawer=GappedSquareModuleDrawer(),
             eye_drawer=SquareModuleDrawer(),
             color_mask=SolidFillColorMask(
-                front_color=(254, 254, 254),
+                front_color=(frontColor, frontColor, frontColor),
                 back_color=(backColor, backColor, backColor),
             ),
             embedded_image_path=foregroundImage
@@ -106,24 +107,19 @@ arr = np.array(img)
 
 qrHeight=arr.shape[0]
 qrWidth=arr.shape[1]
-
-# Make white pixels transparent (slower)
-#for y in range(qrHeight):
-#    for x in range(qrWidth):
-#        if arr[y, x, 0] == backColor and arr[y, x, 1] == backColor and arr[y, x, 2] == backColor:
-#            arr[y, x, 3] = 0
-
-# Make white pixels transparent using numpy (fast)
-mask = np.all(arr[:, :, :3] == backColor, axis=2)
-arr[mask, 3] = 0
-
-img = Image.fromarray(arr)
 finalDestination = outputPath + resultImage
+
 
 if backgroundImage is None:
     img.save(finalDestination)
 
 else:
+    # Make white pixels transparent using numpy (fast)
+    mask = np.all(arr[:, :, :3] == backColor, axis=2)
+    arr[mask, 3] = 0
+
+    img = Image.fromarray(arr)
+
     # Load new background
     bg = Image.open(backgroundImage).convert('RGBA').resize(img.size)
     bg = ImageEnhance.Brightness(bg).enhance(bgBrightnessAdjustment)
