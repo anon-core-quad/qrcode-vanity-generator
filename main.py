@@ -1,30 +1,38 @@
 import qrcode
-import segno
 import numpy as np
 import argparse
 
 from PIL import Image
+from PIL import ImageEnhance
+
 from qrcode.image.styledpil import StyledPilImage
-from qrcode.image.styles.moduledrawers.pil import RoundedModuleDrawer, GappedSquareModuleDrawer
-from qrcode.image.styles.colormasks import RadialGradiantColorMask
-from qrcode.image.styles.colormasks import ImageColorMask
+from qrcode.image.styles.moduledrawers.pil import RoundedModuleDrawer, GappedSquareModuleDrawer, SquareModuleDrawer
+from qrcode.image.styles.colormasks import RadialGradiantColorMask, SolidFillColorMask, ImageColorMask
 
 
 parser = argparse.ArgumentParser(description="My script")
-parser.add_argument("-o", "--output", default="out.txt", help="Output file")
-parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose mode")
-parser.add_argument("--count", type=int, default=1, help="Number of iterations")
+parser.add_argument("-o", "--output", default="result.png", help="Output QR code file")
+parser.add_argument("-fg", "--foreground", help="Specify image used inside the QR points")
+parser.add_argument("-bg", "--background", help="Specify image used in the background, instead of white")
+parser.add_argument("-d", "--data", help="Number of iterations")
 
 args = parser.parse_args()
-print(args.output, args.verbose, args.count)
 
 outputPath = "./outputs/"
 importedImages = "./images/"
-dataQRCode = 'https://example.com'
 
-backgroundImage = 'hyperspace.jpeg'
+resultImage = args.output
+foregroundImage = args.foreground
+backgroundImage = args.background
+dataQRCode = args.data
+
+# Debug
+dataQRCode = 'https://example.com'
 foregroundImage = "tuscany_hills.png"
-resultImage = 'result.png'
+backgroundImage = 'tuscany_hills.png'
+
+bgNeutralColor = 1
+bgBrightnessAdjustment = 0.8
 
 # 1. Generate QR code with high error correction
 qr = qrcode.QRCode(
@@ -36,23 +44,25 @@ qr = qrcode.QRCode(
 qr.make(fit=True)
 qr.add_data(dataQRCode)
 
-
 img = qr.make_image(
     image_factory=StyledPilImage,
+    #module_drawer=GappedSquareModuleDrawer(),
     module_drawer=GappedSquareModuleDrawer(),
-    eye_drawer=RoundedModuleDrawer(),
+    eye_drawer=SquareModuleDrawer(),
     #color_mask=ImageColorMask(color_mask_path=importedImages + foregroundImage),
-    color_mask=RadialGradiantColorMask(),
-    fill_color=(0, 0, 0),  # dark modules stay opaque
-    back_color=(255, 255, 255),
+    # color_mask=RadialGradiantColorMask(
+    #     back_color=(255, 255, 255),
+    #     center_color=(250, 250, 250),
+    #     edge_color=(0, 0, 0),
+    # ),
+    color_mask=SolidFillColorMask(
+        front_color=(254, 254, 254),   # white modules
+        back_color=(bgNeutralColor, bgNeutralColor, bgNeutralColor),          # dark background
+    ),
+    #embedded_image_path="/home/loth/Pictures/tuscany_hills.png"
 )
 
-#img_1 = qr.make_image(image_factory=StyledPilImage, module_drawer=RoundedModuleDrawer())
-#img_2 = qr.make_image(image_factory=StyledPilImage, color_mask=RadialGradiantColorMask())
-#img_3 = qr.make_image(image_factory=StyledPilImage, embedded_image_path="/home/loth/Pictures/tuscany_hills.png")
-
 img = img.convert('RGBA')
-
 
 
 #print(img.mode)   # should print "RGBA"
@@ -67,57 +77,25 @@ qrWidth=arr.shape[1]
 
 #img.save(outputPath + "aaaaa.png")   
 
-# Load and resize background image to match QR size
-#img = Image.open(outputPath + 'aaaaa.png').convert('RGBA').resize(img.size)
-
-
 # Make white pixels transparent using numpy (fast)
 #arr[arr[:, :, :3] == [255, 255, 255], 3] = 0  # set alpha=0 where white
 
 for y in range(qrHeight):
     for x in range(qrWidth):
-        if arr[y, x, 0] == 255 and arr[y, x, 1] == 255 and arr[y, x, 2] == 255:
+        if arr[y, x, 0] == bgNeutralColor and arr[y, x, 1] == bgNeutralColor and arr[y, x, 2] == bgNeutralColor:
             arr[y, x, 3] = 0
 
 
 img = Image.fromarray(arr)
 
-
 # Load new background
 bg = Image.open(importedImages + backgroundImage).convert('RGBA').resize(img.size)
+bg = ImageEnhance.Brightness(bg).enhance(bgBrightnessAdjustment)
+
 
 # Composite: transparent areas show background
 result = Image.alpha_composite(bg, img)
+
 result.convert('RGB').save(outputPath + resultImage)
 
 
-
-
-
-
-
-
-
-
-# Composite: where QR is white (255) → show bg, where dark (0) → keep black
-#mask = img.convert('L')
-#result = Image.composite(img, bg, mask)
-#result.save(outputPath + 'qr_gapped_bg.png')
-#
-#
-#img_1 = qr.make_image(image_factory=StyledPilImage, module_drawer=RoundedModuleDrawer())
-#img_2 = qr.make_image(image_factory=StyledPilImage, color_mask=RadialGradiantColorMask())
-#img_3 = qr.make_image(image_factory=StyledPilImage, embedded_image_path="/home/loth/Pictures/tuscany_hills.png")
-#
-#img_1.save("test1.png")   
-#img_2.save("test2.png")   
-#img_3.save("test3.png")   
-
-
-
-#qr = segno.make('https://example.com', error='h')
-#qr.to_artistic(
-#    background='/home/loth/Pictures/hyperspace.jpeg',
-#    target=outputPath + 'aaaaa2.png',
-#    scale=8
-#)   
