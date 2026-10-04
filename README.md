@@ -13,7 +13,6 @@ Just install the library requirements.
 
 # Usage
 
-
 Generate a white dotted qrcode with image background specified 
 
 ```python qrcode-vanity-generator.py -d example.com --background image_examples/child_birthday.jpeg```
@@ -41,3 +40,11 @@ Generate a QR code with a brightness adjustment to read the dots more easly
 Generate a QR code with gray background and white dots
 
 ```python qrcode-vanity-generator.py -o gray.png -d site.com --backColor 44 --frontColor 200```
+
+
+
+Generate a QR code for bitcoin address in classic black and white style
+
+```python qrcode-vanity-generator.py -o myaddress.png -d bc1qyd054pemgd9qwsuc4ksl03qhhznrq44mfaamhp --backColor 254 --frontColor 3```
+
+

@@ -5,7 +5,7 @@
 qrcode-vanity-generator.py
 
 Description:
-    Brief summary of what this script does.
+    Not just a boring QR code generator. Insert custom image in background or mask it inside the QR modules. Designed for original greeting cards or simply to add a touch of color to your space!
 
 Author: anon_core_quad_9999
 Email: anon_core_quad@proton.me
@@ -28,8 +28,8 @@ from qrcode.image.styles.colormasks import RadialGradiantColorMask, SolidFillCol
 
 parser = argparse.ArgumentParser(description="QR Code vanity generator")
 parser.add_argument("-o", "--output", default="result.png", help="Output QR code file")
-parser.add_argument("-bc", "--backColor", type=int, default=254, help="Output QR code file")
-parser.add_argument("-c", "--frontColor", type=int, default=3, help="Output QR code file")
+parser.add_argument("-bc", "--backColor", type=int, default=254, help="RBG value, from 1 to 254")
+parser.add_argument("-c", "--frontColor", type=int, default=3, help="RBG value, from 1 to 254")
 parser.add_argument("-fg", "--foreground", help="Specify image used inside the QR points")
 parser.add_argument("-cfg", "--centeredForeground", action='store_true', help="Specify image used at center of the QR points")
 parser.add_argument("-bg", "--background", help="Specify image used in the background, instead of white")
@@ -37,9 +37,15 @@ parser.add_argument("-b", "--brightness", type=int, default=0.8, help="Default 0
 parser.add_argument("-d", "--data", required=True, help="String encoded inside the QR code generated")
 args = parser.parse_args()
 
-
 if args.centeredForeground and not args.foreground:
     parser.error('--foreground is required when --centeredForeground is given')
+
+if args.backColor > 254 or args.backColor < 1:
+    parser.error('--backColor get values between 1 and 254')
+
+if args.frontColor > 254 or args.frontColor < 1:
+    parser.error('--backColor get values between 1 and 254')
+
 
 resultImage = args.output
 foregroundImage = args.foreground
