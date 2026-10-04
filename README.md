@@ -6,9 +6,26 @@ It wraps the qrcode lib to generate QR codes.
 
 
 # Setup
-Just install the library requirements.
+Clone the project and enter inside a directory project.
 
-``` pip install -r requirements.txt ```
+Then create a venv envirnoment as usual in python.
+
+```python3 -m venv venv```
+
+
+Activate the created venv
+
+```source venv/bin/activate```
+
+
+Install the requirement libraries
+
+```pip install -r requirements.txt```
+
+
+Run the script to generate a test QR code
+
+```python qrcode-vanity-generator.py -d "hello world"```
 
 
 # Usage
